@@ -1,12 +1,18 @@
 
+import { db } from '../db';
+import { usersTable } from '../db/schema';
 import { type CreateUserInput, type User } from '../schema';
+import { randomUUID } from 'crypto';
 
-export async function createUser(input: CreateUserInput): Promise<User> {
-    // This is a placeholder declaration! Real code should be implemented here.
-    // The goal of this handler is to create a new user profile in the system.
-    // This will integrate with Supabase Auth and store additional profile data.
-    return Promise.resolve({
-        id: 'placeholder-uuid',
+export const createUser = async (input: CreateUserInput): Promise<User> => {
+  try {
+    // Generate UUID for the user
+    const userId = randomUUID();
+
+    // Insert user record
+    const result = await db.insert(usersTable)
+      .values({
+        id: userId,
         email: input.email,
         name: input.name,
         phone: input.phone,
@@ -15,8 +21,14 @@ export async function createUser(input: CreateUserInput): Promise<User> {
         rw: input.rw,
         address: input.address,
         nik: input.nik,
-        is_active: true,
-        created_at: new Date(),
-        updated_at: new Date()
-    } as User);
-}
+        is_active: true // Default value as per schema
+      })
+      .returning()
+      .execute();
+
+    return result[0];
+  } catch (error) {
+    console.error('User creation failed:', error);
+    throw error;
+  }
+};

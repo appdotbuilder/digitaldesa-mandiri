@@ -1,12 +1,13 @@
 
+import { db } from '../db';
+import { announcementsTable } from '../db/schema';
 import { type CreateAnnouncementInput, type Announcement } from '../schema';
 
-export async function createAnnouncement(input: CreateAnnouncementInput): Promise<Announcement> {
-    // This is a placeholder declaration! Real code should be implemented here.
-    // The goal of this handler is to create new announcements for the information board.
-    // Only village staff/admins should be able to create announcements.
-    return Promise.resolve({
-        id: 0,
+export const createAnnouncement = async (input: CreateAnnouncementInput): Promise<Announcement> => {
+  try {
+    // Insert announcement record
+    const result = await db.insert(announcementsTable)
+      .values({
         title: input.title,
         content: input.content,
         category: input.category,
@@ -14,9 +15,15 @@ export async function createAnnouncement(input: CreateAnnouncementInput): Promis
         target_rt: input.target_rt,
         target_rw: input.target_rw,
         is_priority: input.is_priority,
-        published_at: null,
         event_date: input.event_date,
-        created_at: new Date(),
-        updated_at: new Date()
-    } as Announcement);
-}
+        published_at: new Date() // Auto-publish on creation
+      })
+      .returning()
+      .execute();
+
+    return result[0];
+  } catch (error) {
+    console.error('Announcement creation failed:', error);
+    throw error;
+  }
+};
